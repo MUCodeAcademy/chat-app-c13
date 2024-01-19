@@ -19,19 +19,33 @@ const useSocketHook = () => {
             setResponse(prevState => [...prevState, data]);
         });
 
+        socketRef.current.on('private message', data => {
+            setResponse(prevState => [...prevState, data]);
+        });
+
         // When the component unmounts, disconnect from the server
         return () => {
             socketRef.current.disconnect();
         }
     }, []);
 
-    const sendMessage = (message) => {
-        // Send a 'chat message' event with the user's message
-        socketRef.current.emit('chat message', message);
+    const sendMessage = (message, type, toUsername) => {
+        if (type === "public") {
+            // Send a 'chat message' event with the user's message to the server
+            socketRef.current.emit('chat message', message);
+        } else {
+            // Send a 'private message' event with the user's message to a specific username
+            socketRef.current.emit('private message', message, toUsername);
+        }
     }
 
-    // return the response state and the sendMessage function so that we can use it in our main page
-    return { response, sendMessage }
+    const login = (username) => {
+        // Send a 'login' event with the user's username to the server
+        socketRef.current.emit('login', username);
+    }
+
+    // return the response state and the sendMessage/login functions so that we can use it in our main page
+    return { response, sendMessage, login }
 }
 
 export default useSocketHook;

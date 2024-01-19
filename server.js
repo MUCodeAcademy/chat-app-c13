@@ -15,9 +15,29 @@ const io = require('socket.io')(server, {
 
 app.use(cors());
 
+// This stores usernames and their socket connection
+let users = {};
+
 // When anyone connects to the server...
 io.on("connection", (socket) => {
     console.log("New Client Connected");
+
+    socket.on("login", (username) => {
+        // Stores their username in the socket.username property
+        socket.username = username;
+        // This stores their socket connection and their username in the users object
+        users[username] = socket;
+        console.log(users);
+    });
+
+    socket.on("private message", (message, toUsername) => {
+        // Get the target user's socket
+        const targetSocket = users[toUsername];
+        // Send the message to that socket
+        targetSocket.emit("private message", message);
+        // Also send the message to the sender's socket
+        socket.emit("chat message", message);
+    });
 
     // When the user sends a chat message...
     socket.on("chat message", (message) => {
